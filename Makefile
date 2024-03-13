@@ -1,12 +1,12 @@
 NOWARN=-wd3180
-EXEC=lu-omp
+EXEC=lu-omp_datashare
 OBJ =  $(EXEC) $(EXEC)-debug $(EXEC)-serial
 
-MATRIX_SIZE= 200
+MATRIX_SIZE= 5000
 MATRIX_CHECK_SIZE=100
 W :=`grep processor /proc/cpuinfo | wc -l`
 
-CHECKER=inspxe-cl -collect=ti3 -r check
+CHECKER=inspxe-cl -collect=ti3 -k scope=extreme -k stack-depth=32 -k use-maximum-resources=true -r check
 VIEWER=inspxe-gui
 
 # flags

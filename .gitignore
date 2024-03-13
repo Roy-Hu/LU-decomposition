@@ -2,3 +2,7 @@
 lu-omp
 lu-omp-debug
 lu-omp-serial
+check
+lu-omp_datashare-serial
+lu-omp_datashare-debug
+lu-omp_datashare
