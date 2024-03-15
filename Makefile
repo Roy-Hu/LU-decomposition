@@ -16,9 +16,6 @@ OMP=-fopenmp
 
 all: $(OBJ)
 
-export OMP_PLACES=sockets
-export OMP_PROC_BIND=spread
-
 # build the debug parallel version of the program
 $(EXEC)-debug: $(EXEC).cpp
 	icpc $(DEBUG) $(OMP) -o $(EXEC)-debug $(EXEC).cpp -lrt -lnuma
@@ -30,6 +27,8 @@ $(EXEC)-serial: $(EXEC).cpp
 
 # build the optimized parallel version of the program
 $(EXEC): $(EXEC).cpp
+	export OMP_PLACES=sockets
+	export OMP_PROC_BIND=spread
 	icpc $(OPT) $(OMP) -o $(EXEC) $(EXEC).cpp -lrt -lnuma
 
 #run the optimized program in parallel
