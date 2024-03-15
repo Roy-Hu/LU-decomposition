@@ -38,6 +38,8 @@ void deallocateMatrix_numa(double** matrix, int n) {
 // Function to compute the product of matrices L and U
 double** multiplyLU(double** L, double** U, int n) {
     double** LU = allocateMatrix(n);
+
+    #pragma omp parallel for num_threads(16)
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
             LU[i][j] = 0;
@@ -52,6 +54,8 @@ double** multiplyLU(double** L, double** U, int n) {
 // Function to compute the product of permutation vector pi and matrix A, resulting in PA
 double** multiplyPA(double** A, int* pi, int n) {
     double** PA = allocateMatrix(n);
+
+    #pragma omp parallel for num_threads(16)
     for (int i = 0; i < n; ++i) {
         // Use pi to permute rows when copying from A to PA
         for (int j = 0; j < n; ++j) {
@@ -63,13 +67,14 @@ double** multiplyPA(double** A, int* pi, int n) {
 
 // Function to compute the L2,1 norm of a matrix
 double computeL21Norm(int nworkers, int n, double** A, double** L, double** U, int* P) {
+    omp_set_num_threads(16);
+
     double** PA = multiplyPA(A, P, n);
     double** LU = multiplyLU( L, U, n);
 
     // Compute the residual R = PA - LU
     double** R = allocateMatrix(n);
 
-    omp_set_num_threads(16);
 
     #pragma omp parallel for num_threads(16)
     for (int i = 0; i < n; ++i) {
@@ -160,14 +165,20 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         }
 
 
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, A_prime, nworkers) default(none)
-        for (int i = k + 1; i < n; ++i) {
+        int start = (k + 1) - (k + 1) % nworkers;
+        
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
+        for (int i = start; i < n; ++i) {
+            if (i < k + 1) continue;
+
             L[i][k] = A_prime[i][k] / U[k][k];
             U[k][i] = A_prime[k][i];
         }
 
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, A_prime, nworkers) default(none)
-        for (int i = k + 1; i < n; ++i) {
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
+        for (int i = start; i < n; ++i) {
+            if (i < k + 1) continue;
+
             for (int j = k + 1; j < n; ++j) {
                 A_prime[i][j] -= L[i][k] * U[k][j];
             }
