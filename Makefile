@@ -2,7 +2,7 @@ NOWARN=-wd3180
 EXEC=lu-omp_datashare
 OBJ =  $(EXEC) $(EXEC)-debug $(EXEC)-serial
 
-MATRIX_SIZE= 5000
+MATRIX_SIZE= 2000
 MATRIX_CHECK_SIZE=100
 W :=`grep processor /proc/cpuinfo | wc -l`
 
@@ -15,6 +15,9 @@ DEBUG=-O0 -g
 OMP=-fopenmp
 
 all: $(OBJ)
+
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=spread
 
 # build the debug parallel version of the program
 $(EXEC)-debug: $(EXEC).cpp

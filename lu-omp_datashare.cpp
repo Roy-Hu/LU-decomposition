@@ -107,9 +107,9 @@ struct MaxKPrime {
 void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, double** U) {
     double **A_prime = new double*[n];
 
-    #pragma omp parallel for num_threads(nworkers) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
+    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
-        int numa_node = i % numa_num_configured_nodes();
+        int numa_node = omp_get_place_num();
         L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
@@ -154,48 +154,19 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
 
         U[k][k] = A_prime[k][k];
 
-        // #pragma omp parallel num_threads(nworkers) shared(k, n, L, U, A_prime, nworkers, max_k_prime) default(none)
-        // {
-        //     int tid = omp_get_thread_num();
-
-        //     int numa_node = (k + 1 + tid) % numa_num_configured_nodes();
-        //     numa_run_on_node(numa_node);
-        //     numa_set_localalloc();
-
-        //     for (int i = tid; i < k; i += nworkers) {
-        //         swap(L[k][i], L[max_k_prime.k_prime][i]);
-        //     }
-
-        //     #pragma omp barrier
-
-        //     for (int i = k + 1 + tid; i < n; i += nworkers) {
-        //         L[i][k] = A_prime[i][k] / U[k][k];
-        //         U[k][i] = A_prime[k][i];
-        //     }
-
-        //     #pragma omp barrier
-
-        //     for (int i = k + 1 + tid; i < n; i += nworkers) {
-        //         for (int j = k + 1; j < n; ++j) {
-        //             A_prime[i][j] -= L[i][k] * U[k][j];
-        //         }
-        //     }
-        // }
- 
-        #pragma omp parallel for num_threads(nworkers)
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, L, nworkers, max_k_prime) default(none)
         for (int i = 0; i < k; i++) {
             swap(L[k][i], L[max_k_prime.k_prime][i]);
         }
 
-        U[k][k] = A_prime[k][k];
 
-        #pragma omp parallel for num_threads(nworkers)
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, A_prime, nworkers) default(none)
         for (int i = k + 1; i < n; ++i) {
             L[i][k] = A_prime[i][k] / U[k][k];
             U[k][i] = A_prime[k][i];
         }
 
-        #pragma omp parallel for num_threads(nworkers)
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, A_prime, nworkers) default(none)
         for (int i = k + 1; i < n; ++i) {
             for (int j = k + 1; j < n; ++j) {
                 A_prime[i][j] -= L[i][k] * U[k][j];
