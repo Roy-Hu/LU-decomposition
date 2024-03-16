@@ -1,8 +1,11 @@
+export OMP_PLACES=sockets
+export OMP_PROC_BIND=spread
+
 NOWARN=-wd3180
 EXEC=lu-omp_datashare
 OBJ =  $(EXEC) $(EXEC)-debug $(EXEC)-serial
 
-MATRIX_SIZE= 2000
+MATRIX_SIZE= 7000
 MATRIX_CHECK_SIZE=100
 W :=`grep processor /proc/cpuinfo | wc -l`
 
@@ -27,8 +30,6 @@ $(EXEC)-serial: $(EXEC).cpp
 
 # build the optimized parallel version of the program
 $(EXEC): $(EXEC).cpp
-	export OMP_PLACES=sockets
-	export OMP_PROC_BIND=spread
 	icpc $(OPT) $(OMP) -o $(EXEC) $(EXEC).cpp -lrt -lnuma
 
 #run the optimized program in parallel

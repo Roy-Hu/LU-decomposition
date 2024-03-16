@@ -29,7 +29,8 @@ void deallocateMatrix(double** matrix, int n) {
 }
 
 // Function to deallocate memory for a matrix
-void deallocateMatrix_numa(double** matrix, int n) {
+void deallocateMatrix_numa(int nworkers, double** matrix, int n) {
+    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, matrix, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
         numa_free(matrix[i], sizeof(double) * n);
     }
@@ -114,6 +115,8 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
 
     #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
+        // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the row 0 ~ nworker/2 will on numa node 0,
+        // and the row nworker/2 ~ nworker will on numa node 1, nworker ~ 3/2 nworker will on numa node 0, and so on.
         int numa_node = omp_get_place_num();
         L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
@@ -131,14 +134,19 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
     for (int k = 0; k < n; ++k) {
         MaxKPrime max_k_prime = {0.0, -1};
 
-        #pragma omp parallel num_threads(nworkers) shared(k, n, A, nworkers, max_k_prime) default(none)
+        #pragma omp parallel num_threads(nworkers) shared(k, n, A_prime, nworkers, max_k_prime) default(none)
         {
             MaxKPrime max_k_prime_private = {0.0, -1};
-
             // reduction operation for max_k_prime
-            #pragma omp for nowait
-            for (int i = k; i < n; ++i) {
-                double abs_val = abs(A[i][k]);
+            // allingment of the start index of the loop to the number of workers
+            // the (static, 1) make sure the thread match the corresponding data's numa node
+            int start = k - (k % nworkers);
+            #pragma omp for schedule(static, 1) nowait
+            for (int i = start; i < n; ++i) {
+                if (i < k) continue;
+                
+                // Use A_prime instead of A to align thread with the data's numa node
+                double abs_val = abs(A_prime[i][k]);
                 if (abs_val > max_k_prime_private.max) {
                     max_k_prime_private.max = abs_val;
                     max_k_prime_private.k_prime = i;
@@ -159,14 +167,14 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
 
         U[k][k] = A_prime[k][k];
 
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, L, nworkers, max_k_prime) default(none)
+        #pragma omp parallel for num_threads(nworkers) shared(k, L, nworkers, max_k_prime) default(none)
         for (int i = 0; i < k; i++) {
             swap(L[k][i], L[max_k_prime.k_prime][i]);
         }
 
-
         int start = (k + 1) - (k + 1) % nworkers;
         
+        // allign for thread and data's numa node
         #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
@@ -175,6 +183,7 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
             U[k][i] = A_prime[k][i];
         }
 
+        // allign for thread and data's numa node
         #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
@@ -185,7 +194,7 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         }
     }
 
-    deallocateMatrix_numa(A_prime, n);
+    deallocateMatrix_numa(nworkers, A_prime, n);
 }
 
 long fib(int n)
@@ -263,8 +272,8 @@ main(int argc, char **argv)
 
     // Deallocate memory
     deallocateMatrix(A, matrix_size);
-    deallocateMatrix_numa(L, matrix_size);
-    deallocateMatrix_numa(U, matrix_size);
+    deallocateMatrix_numa(nworkers, L, matrix_size);
+    deallocateMatrix_numa(nworkers, U, matrix_size);
 
     delete[] pi;
 
