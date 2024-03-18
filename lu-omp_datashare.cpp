@@ -112,6 +112,7 @@ struct MaxKPrime {
 
 void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, double** U) {
     double **A_prime = new double*[n];
+    // int row_node[n];
 
     #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
@@ -121,6 +122,8 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+
+        // row_node[i] = numa_node;
 
         pi[i] = i;
 
@@ -163,13 +166,21 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         }
 
         swap(pi[k], pi[max_k_prime.k_prime]);
-        swap(A_prime[k], A_prime[max_k_prime.k_prime]);
+
+        #pragma omp parallel for num_threads(nworkers) shared(k, n, A_prime,max_k_prime, nworkers) default(none)
+        for (int i = 0; i < n; i++) {
+            double tmp = A_prime[k][i];
+            A_prime[k][i] = A_prime[max_k_prime.k_prime][i];
+            A_prime[max_k_prime.k_prime][i] = tmp;
+        }
 
         U[k][k] = A_prime[k][k];
 
         #pragma omp parallel for num_threads(nworkers) shared(k, L, nworkers, max_k_prime) default(none)
         for (int i = 0; i < k; i++) {
-            swap(L[k][i], L[max_k_prime.k_prime][i]);
+            double tmp = L[k][i];
+            L[k][i] = L[max_k_prime.k_prime][i];
+            L[max_k_prime.k_prime][i] = tmp;
         }
 
         int start = (k + 1) - (k + 1) % nworkers;
@@ -178,6 +189,11 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
+
+            // use row node and omp_get_place_num() to check if the data is on the correct numa node
+            // if (row_node[i] != omp_get_place_num()) {
+            //     printf("Error: row %d is not on the correct numa node\n", i);
+            // }
 
             L[i][k] = A_prime[i][k] / U[k][k];
             U[k][i] = A_prime[k][i];
@@ -188,6 +204,10 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
 
+            // if (row_node[i] != omp_get_place_num()) {
+            //     printf("Error: row %d is not on the correct numa node\n", i);
+            // }
+            
             for (int j = k + 1; j < n; ++j) {
                 A_prime[i][j] -= L[i][k] * U[k][j];
             }
