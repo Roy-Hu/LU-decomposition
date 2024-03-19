@@ -45,7 +45,7 @@ double** multiplyLU(double** L, double** U, int n) {
         for (int j = 0; j < n; ++j) {
             LU[i][j] = 0;
             for (int k = 0; k < n; ++k) {
-                LU[i][j] += L[i][k] * U[k][j];
+                LU[i][j] += L[i][k] * U[j][k];
             }
         }
     }
@@ -71,7 +71,7 @@ double computeL21Norm(int nworkers, int n, double** A, double** L, double** U, i
     omp_set_num_threads(16);
 
     double** PA = multiplyPA(A, P, n);
-    double** LU = multiplyLU( L, U, n);
+    double** LU = multiplyLU(L, U, n);
 
     // Compute the residual R = PA - LU
     double** R = allocateMatrix(n);
@@ -112,9 +112,9 @@ struct MaxKPrime {
 
 void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, double** U) {
     double **A_prime = new double*[n];
-    // int row_node[n];
+    int row_node[n];
 
-    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
+    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(row_node, n, L, U, A, pi, A_prime, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
         // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the row 0 ~ nworker/2 will on numa node 0,
         // and the row nworker/2 ~ nworker will on numa node 1, nworker ~ 3/2 nworker will on numa node 0, and so on.
@@ -123,7 +123,7 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
         A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
 
-        // row_node[i] = numa_node;
+        row_node[i] = numa_node;
 
         pi[i] = i;
 
@@ -186,30 +186,30 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         int start = (k + 1) - (k + 1) % nworkers;
         
         // allign for thread and data's numa node
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(row_node, k, n, L, U, start, A_prime, nworkers) default(none)
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
 
             // use row node and omp_get_place_num() to check if the data is on the correct numa node
-            // if (row_node[i] != omp_get_place_num()) {
-            //     printf("Error: row %d is not on the correct numa node\n", i);
-            // }
+            if (row_node[i] != omp_get_place_num()) {
+                printf("Error: row %d is not on the correct numa node\n", i);
+            }
 
             L[i][k] = A_prime[i][k] / U[k][k];
-            U[k][i] = A_prime[k][i];
+            U[i][k] = A_prime[k][i];
         }
 
         // allign for thread and data's numa node
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
+        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(row_node, k, n, L, U, start, A_prime, nworkers) default(none)
         for (int i = start; i < n; ++i) {
             if (i < k + 1) continue;
 
-            // if (row_node[i] != omp_get_place_num()) {
-            //     printf("Error: row %d is not on the correct numa node\n", i);
-            // }
+            if (row_node[i] != omp_get_place_num()) {
+                printf("Error: row %d is not on the correct numa node\n", i);
+            }
             
             for (int j = k + 1; j < n; ++j) {
-                A_prime[i][j] -= L[i][k] * U[k][j];
+                A_prime[i][j] -= L[i][k] * U[j][k];
             }
         }
     }
