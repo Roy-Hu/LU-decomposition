@@ -35,7 +35,7 @@ $(EXEC): $(EXEC).cpp
 #run the optimized program in parallel
 runp: $(EXEC)
 	@echo use make runp W=nworkers
-	OMP_PLACES=sockets OMP_PROC_BIND=spread ./$(EXEC) $(MATRIX_SIZE) $(W)
+	OMP_PLACES=sockets OMP_PROC_BIND=spread ./$(EXEC) $(MATRIX_SIZE) 16
 
 #run the serial version of your program
 runs: $(EXEC)-serial

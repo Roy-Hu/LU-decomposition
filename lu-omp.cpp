@@ -168,26 +168,27 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
         // implicit barrier
 
         // Should wait until the globla maximum value is found
-
-        // avoid row pointer changed by different threads
-        #pragma omp for
-        for (int i = 0; i < n; i++) {
-            swap(A_prime[k][i],  A_prime[max_k_prime.k_prime][i]);
-        }
-
         swap(pi[k], pi[max_k_prime.k_prime]);
-        U[k][k] = A_prime[k][k];
+        U[k][k] = A_prime[max_k_prime.k_prime][k];
 
         #pragma omp parallel num_threads(nworkers) shared(k, n, L, U, pi, A_prime, nworkers, max_k_prime) default(none)
         {   
             int tid = omp_get_thread_num();
 
             // k and max_k_prime.k_prime may be on different numa nodes, no need to align
-            #pragma omp for
+            #pragma omp for nowait
             for (int i = 0; i < k; i++) {
                 swap(L[k][i], L[max_k_prime.k_prime][i]);
             }
 
+            // avoid row pointer changed by different threads
+            #pragma omp for
+            for (int i = 0; i < n; i++) {
+                swap(A_prime[k][i],  A_prime[max_k_prime.k_prime][i]);
+            }
+
+            // implicit barrier
+            
             int start = (k + 1) - (k + 1) % nworkers + tid;
             start = (tid < (k + 1) % nworkers) ? start + nworkers : start;
             // allign for thread and data's numa node
