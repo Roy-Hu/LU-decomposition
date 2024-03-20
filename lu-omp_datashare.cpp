@@ -108,44 +108,44 @@ struct MaxKPrime {
     int k_prime;
 };
 
-#pragma omp declare reduction(maximum : struct MaxKPrime : omp_out = omp_in.max > omp_out.max ? omp_in : omp_out)
-
 void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, double** U) {
     double **A_prime = new double*[n];
-    // int row_node[n];
-
-    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(n, L, U, A, pi, A_prime, nworkers) default(none)
-    for (int i = 0; i < n; ++i) {
-        // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the row 0 ~ nworker/2 will on numa node 0,
-        // and the row nworker/2 ~ nworker will on numa node 1, nworker ~ 3/2 nworker will on numa node 0, and so on.
-        int numa_node = omp_get_place_num();
-        L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-        U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-        A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-
-        // row_node[i] = numa_node;
-
-        pi[i] = i;
-
-        for (int j = 0; j < n; ++j) {
-            L[i][j] = (i == j) ? 1 : 0;
-            U[i][j] = 0;
-            A_prime[i][j] = A[i][j];
-        }
-    }
+    int row_numa[n];
 
     for (int k = 0; k < n; ++k) {
         MaxKPrime max_k_prime = {0.0, -1};
 
-        #pragma omp parallel num_threads(nworkers) shared(k, n, A_prime, nworkers, max_k_prime) default(none)
-        {
+        #pragma omp parallel num_threads(nworkers) shared(k, n, A, L, U, pi, row_numa, A_prime, nworkers, max_k_prime) default(none)
+        {   
+            int tid = omp_get_thread_num();
+
+            if (k == 0) {
+                for (int i = tid; i < n; i += nworkers) {
+                    // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the row 0 ~ nworker/2 will on numa node 0,
+                    // and the row nworker/2 ~ nworker will on numa node 1, nworker ~ 3/2 nworker will on numa node 0, and so on.]
+                    int numa_node = omp_get_place_num();
+                    row_numa[i] == numa_node;
+                    L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+                    U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+                    A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+
+                    pi[i] = i;
+
+                    for (int j = 0; j < n; ++j) {
+                        L[i][j] = (i == j) ? 1 : 0;
+                        U[i][j] = 0;
+                        A_prime[i][j] = A[i][j];
+                    }
+                }
+            }
+
             MaxKPrime max_k_prime_private = {0.0, -1};
             // reduction operation for max_k_prime
             // allingment of the start index of the loop to the number of workers
             // the (static, 1) make sure the thread match the corresponding data's numa node
-            int start = k - (k % nworkers);
-            #pragma omp for schedule(static, 1) nowait
-            for (int i = start; i < n; ++i) {
+
+            int start = k - k % nworkers + tid;
+            for (int i = start; i < n; i += nworkers) {
                 if (i < k) continue;
                 
                 // Use A_prime instead of A to align thread with the data's numa node
@@ -163,55 +163,38 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                     max_k_prime = max_k_prime_private;
                 }
             }
-        }
 
-        swap(pi[k], pi[max_k_prime.k_prime]);
+            #pragma omp barrier
 
-        #pragma omp parallel for num_threads(nworkers) shared(k, n, A_prime,max_k_prime, nworkers) default(none)
-        for (int i = 0; i < n; i++) {
-            double tmp = A_prime[k][i];
-            A_prime[k][i] = A_prime[max_k_prime.k_prime][i];
-            A_prime[max_k_prime.k_prime][i] = tmp;
-        }
-
-        U[k][k] = A_prime[k][k];
-
-        #pragma omp parallel for num_threads(nworkers) shared(k, L, nworkers, max_k_prime) default(none)
-        for (int i = 0; i < k; i++) {
-            double tmp = L[k][i];
-            L[k][i] = L[max_k_prime.k_prime][i];
-            L[max_k_prime.k_prime][i] = tmp;
-        }
-
-        int start = (k + 1) - (k + 1) % nworkers;
-        
-        // allign for thread and data's numa node
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
-        for (int i = start; i < n; ++i) {
-            if (i < k + 1) continue;
-
-            // use row node and omp_get_place_num() to check if the data is on the correct numa node
-            // if (row_node[i] != omp_get_place_num()) {
-            //     printf("Error: row %d is not on the correct numa node\n", i);
-            // }
-
-            L[i][k] = A_prime[i][k] / U[k][k];
-            U[k][i] = A_prime[k][i];
-        }
-
-        // allign for thread and data's numa node
-        #pragma omp parallel for num_threads(nworkers) schedule(static, 1) shared(k, n, L, U, start, A_prime, nworkers) default(none)
-        for (int i = start; i < n; ++i) {
-            if (i < k + 1) continue;
-
-            // if (row_node[i] != omp_get_place_num()) {
-            //     printf("Error: row %d is not on the correct numa node\n", i);
-            // }
-            
-            for (int j = k + 1; j < n; ++j) {
-                A_prime[i][j] -= L[i][k] * U[k][j];
+            #pragma omp single 
+            {
+                swap(A_prime[k], A_prime[max_k_prime.k_prime]);
+                swap(pi[k], pi[max_k_prime.k_prime]);
+                U[k][k] = A_prime[k][k];
             }
-        }
+
+            for (int i = tid; i < k; i += nworkers) {
+                swap(L[k][i], L[max_k_prime.k_prime][i]);
+            }
+
+            start = (k + 1) - (k + 1) % nworkers + tid;
+            // allign for thread and data's numa node
+            for (int i = start; i < n; i += nworkers) {
+                if (i < k + 1) continue;
+
+                L[i][k] = A_prime[i][k] / A_prime[k][k];
+                U[k][i] = A_prime[k][i];
+            }
+
+            // allign for thread and data's numa node
+            for (int i = start; i < n; i += nworkers) {
+                if (i < k + 1) continue;
+
+                for (int j = k + 1; j < n; ++j) {
+                    A_prime[i][j] -= L[i][k] * A_prime[k][j];
+                }
+            }
+        }                
     }
 
     deallocateMatrix_numa(nworkers, A_prime, n);
@@ -250,6 +233,7 @@ main(int argc, char **argv)
                 << endl;
 
     omp_set_num_threads(nworkers);
+    omp_set_max_active_levels(2);
 
     if (numa_available() == -1) {
         cerr << "Error: NUMA unavailable" << endl;
@@ -265,7 +249,7 @@ main(int argc, char **argv)
     int* pi = new int[matrix_size];
     
     // Random number generation setup
-    mt19937 generator(time(nullptr)); // Random number generator seeded with current time
+    mt19937 generator(42); // Random number generator seeded with current time
     uniform_real_distribution<double> distribution(-10.0, 10.0); // Range of random value
 
     // Generate random matrix A
