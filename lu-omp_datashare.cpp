@@ -110,44 +110,45 @@ struct MaxKPrime {
 
 void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, double** U) {
     double **A_prime = new double*[n];
-    int row_numa[n];
 
+    #pragma omp parallel num_threads(nworkers) shared(n, A, L, U, pi, A_prime, nworkers) default(none)
+    {
+        int tid = omp_get_thread_num();
+
+        // By starting at tid and incrementing by nworkers, we ensure that row tid + nworkers*cnt is always 
+        // handle by the same thread
+        for (int i = tid; i < n; i += nworkers) {
+            // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the OpenMP worker threads and the 
+            // will be binded with the hardware threads,
+            int numa_node = omp_get_place_num();
+            L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+            U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+            A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
+
+            // Initialize L, U, pi, and A_prime
+            pi[i] = i;            
+            for (int j = 0; j < n; j++) {
+                L[i][j] = (i == j) ? 1 : 0;
+                U[i][j] = 0;
+                A_prime[i][j] = A[i][j];
+            }
+        }
+    }
+
+    // The outer loop shouldn't be parallelized since the k-th iteration depends on the result of the (k-1)-th iteration
     for (int k = 0; k < n; ++k) {
         MaxKPrime max_k_prime = {0.0, -1};
 
-        #pragma omp parallel num_threads(nworkers) shared(k, n, A, L, U, pi, row_numa, A_prime, nworkers, max_k_prime) default(none)
+        #pragma omp parallel num_threads(nworkers) shared(k, n, A_prime, nworkers, max_k_prime) default(none)
         {   
             int tid = omp_get_thread_num();
-
-            if (k == 0) {
-                for (int i = tid; i < n; i += nworkers) {
-                    // Since we have set OMP_PLACES=sockets and OMP_PROC_BIND=spread the row 0 ~ nworker/2 will on numa node 0,
-                    // and the row nworker/2 ~ nworker will on numa node 1, nworker ~ 3/2 nworker will on numa node 0, and so on.]
-                    int numa_node = omp_get_place_num();
-                    row_numa[i] == numa_node;
-                    L[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-                    U[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-                    A_prime[i] = (double *)numa_alloc_onnode(n * sizeof(double), numa_node);
-
-                    pi[i] = i;
-
-                    for (int j = 0; j < n; ++j) {
-                        L[i][j] = (i == j) ? 1 : 0;
-                        U[i][j] = 0;
-                        A_prime[i][j] = A[i][j];
-                    }
-                }
-            }
-
             MaxKPrime max_k_prime_private = {0.0, -1};
             // reduction operation for max_k_prime
-            // allingment of the start index of the loop to the number of workers
-            // the (static, 1) make sure the thread match the corresponding data's numa node
+            // allingment of the start index of the loop to the number of workers (tid + nworkers*cnt)
+            int start = k - (k % nworkers) + tid;
+            start = (tid < (k % nworkers)) ? start + nworkers : start;
 
-            int start = k - k % nworkers + tid;
-            for (int i = start; i < n; i += nworkers) {
-                if (i < k) continue;
-                
+            for (int i = start; i < n; i += nworkers) {                
                 // Use A_prime instead of A to align thread with the data's numa node
                 double abs_val = abs(A_prime[i][k]);
                 if (abs_val > max_k_prime_private.max) {
@@ -163,41 +164,44 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                     max_k_prime = max_k_prime_private;
                 }
             }
+        }
+        
 
-            #pragma omp barrier
+        // implicit barrier
 
-            #pragma omp single 
-            {
-                swap(A_prime[k], A_prime[max_k_prime.k_prime]);
-                swap(pi[k], pi[max_k_prime.k_prime]);
-                U[k][k] = A_prime[k][k];
-            }
+        // Should wait until the globla maximum value is found
+        swap(A_prime[k], A_prime[max_k_prime.k_prime]);
+        swap(pi[k], pi[max_k_prime.k_prime]);
+        U[k][k] = A_prime[k][k];
 
-            for (int i = tid; i < k; i += nworkers) {
+        #pragma omp parallel num_threads(nworkers) shared(k, n, L, U, pi, A_prime, nworkers, max_k_prime) default(none)
+        {   
+            int tid = omp_get_thread_num();
+
+            // k and max_k_prime.k_prime may be on different numa nodes, no need to align
+            #pragma omp for
+            for (int i = 0; i < k; i++) {
                 swap(L[k][i], L[max_k_prime.k_prime][i]);
             }
 
-            start = (k + 1) - (k + 1) % nworkers + tid;
+            int start = (k + 1) - (k + 1) % nworkers + tid;
+            start = (tid < (k + 1) % nworkers) ? start + nworkers : start;
             // allign for thread and data's numa node
 
-            #pragma omp simd 
             for (int i = start; i < n; i += nworkers) {
-                if (i < k + 1) continue;
-
                 L[i][k] = A_prime[i][k] / A_prime[k][k];
                 U[k][i] = A_prime[k][i];
-            }
 
-            // allign for thread and data's numa node
-            for (int i = start; i < n; i += nworkers) {
-                if (i < k + 1) continue;
 
+                // Use SIME to process multiple j iterations in one go
                 #pragma omp simd
-                for (int j = k + 1; j < n; ++j) {
+                for (int j = k + 1; j < n; j++) {
                     A_prime[i][j] -= L[i][k] * A_prime[k][j];
                 }
             }
-        }                
+        }
+
+        // implicit barrier
     }
 
     deallocateMatrix_numa(nworkers, A_prime, n);
