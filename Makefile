@@ -2,7 +2,7 @@ export OMP_PLACES=sockets
 export OMP_PROC_BIND=spread
 
 NOWARN=-wd3180
-EXEC=lu-omp_datashare
+EXEC=lu-omp
 OBJ =  $(EXEC) $(EXEC)-debug $(EXEC)-serial
 
 MATRIX_SIZE= 7000
