@@ -128,8 +128,8 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
             // Initialize L, U, pi, and A_prime
             pi[i] = i;            
             for (int j = 0; j < n; j++) {
-                L[i][j] = (i == j) ? 1 : 0;
-                U[i][j] = 0;
+                L[i][j] = (i == j) ? 1. : 0.;
+                U[i][j] = 0.;
                 A_prime[i][j] = A[i][j];
             }
         }
@@ -165,12 +165,16 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                 }
             }
         }
-        
-
         // implicit barrier
 
         // Should wait until the globla maximum value is found
-        swap(A_prime[k], A_prime[max_k_prime.k_prime]);
+
+        // avoid row pointer changed by different threads
+        #pragma omp for
+        for (int i = 0; i < n; i++) {
+            swap(A_prime[k][i],  A_prime[max_k_prime.k_prime][i]);
+        }
+
         swap(pi[k], pi[max_k_prime.k_prime]);
         U[k][k] = A_prime[k][k];
 
@@ -192,7 +196,6 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                 L[i][k] = A_prime[i][k] / A_prime[k][k];
                 U[k][i] = A_prime[k][i];
 
-
                 // Use SIME to process multiple j iterations in one go
                 #pragma omp simd
                 for (int j = k + 1; j < n; j++) {
@@ -200,7 +203,6 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                 }
             }
         }
-
         // implicit barrier
     }
 
