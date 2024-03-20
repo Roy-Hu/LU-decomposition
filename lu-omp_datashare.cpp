@@ -179,6 +179,8 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
 
             start = (k + 1) - (k + 1) % nworkers + tid;
             // allign for thread and data's numa node
+
+            #pragma omp simd 
             for (int i = start; i < n; i += nworkers) {
                 if (i < k + 1) continue;
 
@@ -190,6 +192,7 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
             for (int i = start; i < n; i += nworkers) {
                 if (i < k + 1) continue;
 
+                #pragma omp simd
                 for (int j = k + 1; j < n; ++j) {
                     A_prime[i][j] -= L[i][k] * A_prime[k][j];
                 }

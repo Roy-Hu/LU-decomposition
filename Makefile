@@ -6,7 +6,7 @@ EXEC=lu-omp_datashare
 OBJ =  $(EXEC) $(EXEC)-debug $(EXEC)-serial
 
 MATRIX_SIZE= 7000
-MATRIX_CHECK_SIZE=100
+MATRIX_CHECK_SIZE=1000
 W :=`grep processor /proc/cpuinfo | wc -l`
 
 CHECKER=inspxe-cl -collect=ti3 -k scope=extreme -k stack-depth=32 -k use-maximum-resources=true -r check
@@ -45,7 +45,7 @@ runs: $(EXEC)-serial
 #run the optimized program with thread checker
 check: $(EXEC)
 	@echo use make check W=nworkers
-	$(CHECKER) ./$(EXEC) $(MATRIX_SIZE) $(W)
+	$(CHECKER) ./$(EXEC) $(MATRIX_CHECK_SIZE) $(W)
 
 #view the thread checker result
 view:
