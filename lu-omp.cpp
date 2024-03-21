@@ -115,31 +115,33 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
     double **A_prime = new double*[n];
     MaxKPrime max_k_prime = {0.0, -1};
 
-    // Allocate memory for matrices L, U, and A_prime, and pi
-    // Use static, 1 scheduling to distribute the work among threads
-    // Use reduction to find the maximum value of A_prime[k][0] and its index k
-    #pragma omp parallel for num_threads(nworkers) schedule(static, 1) reduction(maximum: max_k_prime) shared(n, L, U, A, pi, A_prime, max_k_prime, nworkers) default(none)
-    for (int i = 0; i < n; ++i) {
-        L[i] = (double *)numa_alloc_local(n * sizeof(double));
-        U[i] = (double *)numa_alloc_local(n * sizeof(double));
-        A_prime[i] = (double *)numa_alloc_local(n * sizeof(double));
-
-        memset(U[i], 0, n * sizeof(double));
-        memset(L[i], 0, n * sizeof(double));
-        memcpy(A_prime[i], A[i], n * sizeof(double));
-        
-        L[i][i] = 1;
-        pi[i] = i;
-
-        double abs_val = abs(A_prime[i][0]);
-        if (abs_val > max_k_prime.max) {
-            max_k_prime.max = abs_val;
-            max_k_prime.k_prime = i;
-        }
-    }
-    
-    #pragma omp parallel num_threads(nworkers) shared(n, L, U, pi, A_prime, nworkers, max_k_prime) default(none)
+    #pragma omp parallel num_threads(nworkers) shared(n, L, U, A, pi, A_prime, max_k_prime, nworkers) default(none)
     {
+        // Allocate memory for matrices L, U, and A_prime, and pi
+        // Use static, 1 scheduling to distribute the work among threads
+        // Use reduction to find the maximum value of A_prime[k][0] and its index k
+        #pragma omp for schedule(static, 1) reduction(maximum: max_k_prime) 
+        for (int i = 0; i < n; ++i) {
+            L[i] = (double *)numa_alloc_local(n * sizeof(double));
+            U[i] = (double *)numa_alloc_local(n * sizeof(double));
+            A_prime[i] = (double *)numa_alloc_local(n * sizeof(double));
+
+            memset(U[i], 0, n * sizeof(double));
+            memset(L[i], 0, n * sizeof(double));
+            memcpy(A_prime[i], A[i], n * sizeof(double));
+            
+            L[i][i] = 1;
+            pi[i] = i;
+
+            double abs_val = abs(A_prime[i][0]);
+            if (abs_val > max_k_prime.max) {
+                max_k_prime.max = abs_val;
+                max_k_prime.k_prime = i;
+            }
+        }
+
+        // implicit barrier
+
         for (int k = 0; k < n; ++k) {
             // The swapping for each metrix is done by different threads
             #pragma omp sections
@@ -160,10 +162,6 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                 #pragma omp section
                 {   
                     memcpy(U[k] + k, A_prime[max_k_prime.k_prime] + k, (n - k) * sizeof(double));
-                }
-
-                #pragma omp section
-                {   
                     // A_prime[k] is not be use in the future, don't need to swap
                     memcpy(A_prime[max_k_prime.k_prime] + k, A_prime[k] + k, (n - k) * sizeof(double));
                 }
@@ -171,14 +169,17 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
 
             // implicit barrier
 
-            max_k_prime = {0.0, -1};
+            #pragma omp single
+            {
+                max_k_prime = {0.0, -1};
+            }
 
-            // allign for thread and data's numa node
-            int start = (k + 1) - (k + 1) % nworkers;
-            
+            // implicit barrier
+
+            // (k + 1) - (k + 1) % nworkers to allign for thread and data's numa node            
             // Use static, 1 to match the row's numa node to the thread
             #pragma omp for schedule(static, 1) reduction(maximum: max_k_prime) 
-            for (int i = start; i < n; ++i) {
+            for (int i = (k + 1) - (k + 1) % nworkers; i < n; ++i) {
                 if (i < k + 1) continue;
                 L[i][k] = A_prime[i][k] / U[k][k];
                 
@@ -194,9 +195,9 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
                     max_k_prime.k_prime = i;
                 }
             }
+            // implicit barrier
         }
     }
-    
 
     deallocateMatrix_numa(nworkers, A_prime, n);
 }

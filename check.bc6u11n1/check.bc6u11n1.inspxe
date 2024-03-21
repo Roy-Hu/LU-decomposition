@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+ <rdmgr>
+  <timestamp type="u64_t">1711033566</timestamp>
+  <hostname type="string">bc6u11n1</hostname>
+  <os type="string">linux</os>
+  <product type="string">Intel® Inspector 2018 Update 2</product>
+  <buildNumber type="s32_t">551023</buildNumber>
+  <logicalCPUCount type="s32_t">32</logicalCPUCount>
+  <CPUFrequency type="s64_t">2600000000</CPUFrequency>
+  <CPUFamily type="s32_t">6</CPUFamily>
+  <CPUModel type="s32_t">62</CPUModel>
+  <CPUStepping type="s32_t">4</CPUStepping>
+  <CPUBrandName type="string">Intel(R) Xeon(R) CPU E5-2650 v2 @ 2.60GHz</CPUBrandName>
+  <isa type="string">avx</isa>
+  <mpirank type="s32_t">0</mpirank>
+  <collectionTimeBegin type="u64_t">1711033566</collectionTimeBegin>
+  <collectionTimeEnd type="u64_t">1711033624</collectionTimeEnd>
+  <variables>
+   <at type="string">ti3</at>
+   <mpirank type="string">0</mpirank>
+  </variables>
+ </rdmgr>
+</root>

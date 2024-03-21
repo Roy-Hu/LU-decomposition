@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="utf-8"?>
+<log version="1.0" tool="runtool">
+
+<msg id="1" tool="runtool">
+  <type>log-start</type>
+  <arg>2024/03/21 10:06:06</arg>
+</msg>
+<msg id="2" tool="runtool">
+  <type>collector-starts</type>
+</msg>
+<msg id="3" tool="runtool">
+  <type>marker-file</type>
+  <arg>/home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe</arg>
+</msg>
+<msg id="4" tool="tc">
+  <type>START</type>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="5" tool="tc">
+  <type>EXEC_OF_INTEREST</type>
+  <arg>/home/ch155/A2/lu-omp</arg>
+  <arg>39394</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="6" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/home/ch155/A2/lu-omp</arg>
+  <arg>0x400000</arg>
+  <arg>0x4209bf</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="7" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/ld-linux-x86-64.so.2</arg>
+  <arg>0x7fbed7239000</arg>
+  <arg>0x7fbed745c14f</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="8" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>[vdso]</arg>
+  <arg>0x7ffdf6dfa000</arg>
+  <arg>0x7ffdf6dfae6c</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="9" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/xalt/default/lib64/libxalt_init.so</arg>
+  <arg>0x7fbec1ffe000</arg>
+  <arg>0x7fbec2223767</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="10" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/librt.so.1</arg>
+  <arg>0x7fbec1c9b000</arg>
+  <arg>0x7fbec1ea2c17</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:06 2024</timestamp>
+</msg>
+<msg id="11" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/libnuma.so.1</arg>
+  <arg>0x7fbec1a58000</arg>
+  <arg>0x7fbec1c638e7</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="12" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6</arg>
+  <arg>0x7fbec18be000</arg>
+  <arg>0x7fbec1a578bf</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="13" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/libm.so.6</arg>
+  <arg>0x7fbec15bc000</arg>
+  <arg>0x7fbec18bd127</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="14" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so</arg>
+  <arg>0x7fbec14b3000</arg>
+  <arg>0x7fbec15bbc07</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="15" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1</arg>
+  <arg>0x7fbec149a000</arg>
+  <arg>0x7fbec14b242f</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="16" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/libpthread.so.0</arg>
+  <arg>0x7fbec127e000</arg>
+  <arg>0x7fbec1499487</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="17" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/libc.so.6</arg>
+  <arg>0x7fbec0eb1000</arg>
+  <arg>0x7fbec127d1df</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="18" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/lib64/libdl.so.2</arg>
+  <arg>0x7fbec0cad000</arg>
+  <arg>0x7fbec0eb010f</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:07 2024</timestamp>
+</msg>
+<msg id="19" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so</arg>
+  <arg>0x7fbebd3e6000</arg>
+  <arg>0x7fbebd3f2340</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:09 2024</timestamp>
+</msg>
+<msg id="20" tool="tc">
+  <type>LOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so</arg>
+  <arg>0x7fbebcbdc000</arg>
+  <arg>0x7fbebcde763f</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:06:10 2024</timestamp>
+</msg>
+<msg id="21" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/home/ch155/A2/lu-omp</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="22" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/ld-linux-x86-64.so.2</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="23" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>[vdso]</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="24" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/xalt/default/lib64/libxalt_init.so</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="25" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/librt.so.1</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="26" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/libnuma.so.1</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="27" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="28" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/libm.so.6</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="29" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="30" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="31" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/libpthread.so.0</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="32" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/libc.so.6</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="33" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/lib64/libdl.so.2</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="34" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="35" tool="tc">
+  <type>UNLOAD_MODULE</type>
+  <arg>/opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="36" tool="tc">
+  <type>PROCESS_TERMINATE</type>
+  <arg>/home/ch155/A2/lu-omp</arg>
+  <arg>39394</arg>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="37" tool="tc">
+  <type>ANALYSIS_COMPLETE</type>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="38" tool="tc">
+  <type>STOP</type>
+  <severity>INFO</severity>
+  <timestamp>Thu Mar 21 10:07:00 2024</timestamp>
+</msg>
+<msg id="39" tool="runtool">
+  <type>app-exit-code</type>
+  <arg>0</arg>
+</msg>
+<msg id="40" tool="runtool">
+  <type>marker-file</type>
+  <arg>/home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe</arg>
+</msg>
+<msg id="41" tool="runtool">
+  <type>collector-done</type>
+</msg>
+<msg id="42" tool="runtool">
+  <type>log-end</type>
+  <arg>2024/03/21 10:07:04</arg>
+</msg>
+
+</log>
+

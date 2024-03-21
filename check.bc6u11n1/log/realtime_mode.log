@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+ <message severity="info">Analyzing data in the node-wide mode. The hostname (bc6u11n1) will be added to the result path/name.</message>
+ <nop/>
+ <message severity="verbose">Analysis started...</message>
+ <nop/>
+ <message severity="verbose">Result file: /home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe </message>
+ <nop/>
+ <message severity="verbose">Found target process /home/ch155/A2/lu-omp (PID = 39394). Analysis started... </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /home/ch155/A2/lu-omp. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/ld-linux-x86-64.so.2. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: [vdso]. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /opt/apps/software/Core/xalt/default/lib64/libxalt_init.so. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/librt.so.1. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/libnuma.so.1. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/libm.so.6. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/libpthread.so.0. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/libc.so.6. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /lib64/libdl.so.2. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so. </message>
+ <nop/>
+ <message severity="verbose">Loaded module: /opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /home/ch155/A2/lu-omp. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/ld-linux-x86-64.so.2. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: [vdso]. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /opt/apps/software/Core/xalt/default/lib64/libxalt_init.so. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/librt.so.1. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/libnuma.so.1. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/libm.so.6. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/libpthread.so.0. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/libc.so.6. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /lib64/libdl.so.2. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so. </message>
+ <nop/>
+ <message severity="verbose">Unloaded module: /opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so. </message>
+ <nop/>
+ <message severity="verbose">Process /home/ch155/A2/lu-omp (PID = 39394) has terminated. </message>
+ <nop/>
+ <message severity="verbose">Application exit code: 0 </message>
+ <nop/>
+ <message severity="verbose">Result file: /home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe </message>
+ <nop/>
+ <message severity="verbose">Analysis completed</message>
+ <nop/>
+ <message severity="info">  </message>
+ <nop/>
+ <message severity="info">0 new problem(s) found </message>
+ <nop/>
+</feedback>

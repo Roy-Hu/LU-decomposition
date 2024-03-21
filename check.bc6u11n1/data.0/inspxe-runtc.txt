@@ -1,0 +1,40 @@
+
+=== Start: [2024/03/21 10:06:06] === 
+Analysis started...
+Result file: /home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe 
+Found target process /home/ch155/A2/lu-omp (PID = 39394). Analysis started... 
+Loaded module: /home/ch155/A2/lu-omp. 
+Loaded module: /lib64/ld-linux-x86-64.so.2. 
+Loaded module: [vdso]. 
+Loaded module: /opt/apps/software/Core/xalt/default/lib64/libxalt_init.so. 
+Loaded module: /lib64/librt.so.1. 
+Loaded module: /lib64/libnuma.so.1. 
+Loaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6. 
+Loaded module: /lib64/libm.so.6. 
+Loaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so. 
+Loaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1. 
+Loaded module: /lib64/libpthread.so.0. 
+Loaded module: /lib64/libc.so.6. 
+Loaded module: /lib64/libdl.so.2. 
+Loaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so. 
+Loaded module: /opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so. 
+Unloaded module: /home/ch155/A2/lu-omp. 
+Unloaded module: /lib64/ld-linux-x86-64.so.2. 
+Unloaded module: [vdso]. 
+Unloaded module: /opt/apps/software/Core/xalt/default/lib64/libxalt_init.so. 
+Unloaded module: /lib64/librt.so.1. 
+Unloaded module: /lib64/libnuma.so.1. 
+Unloaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libstdc++.so.6. 
+Unloaded module: /lib64/libm.so.6. 
+Unloaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libiomp5.so. 
+Unloaded module: /opt/apps/software/Core/GCCcore/8.3.0/lib64/libgcc_s.so.1. 
+Unloaded module: /lib64/libpthread.so.0. 
+Unloaded module: /lib64/libc.so.6. 
+Unloaded module: /lib64/libdl.so.2. 
+Unloaded module: /projects/comp422/pkgs-src/llvm-project/openmp/openmp-install/lib/libarcher.so. 
+Unloaded module: /opt/apps/software/Core/Inspector/2018_update2/inspector_2018.2.0.551023/lib64/runtime/libittnotify.so. 
+Process /home/ch155/A2/lu-omp (PID = 39394) has terminated. 
+Application exit code: 0 
+Result file: /home/ch155/A2/check.bc6u11n1/check.bc6u11n1.inspxe 
+Analysis completed
+=== End: [2024/03/21 10:07:04] === 
