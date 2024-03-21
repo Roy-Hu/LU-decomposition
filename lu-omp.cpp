@@ -85,6 +85,7 @@ double computeL21Norm(int nworkers, int n, double** A, double** L, double** U, i
     }
 
     // Compute the L2,1 norm of the residual
+    // parallelize with reduction
     double norm = 0;
     #pragma omp parallel for reduction(+:norm)
     for (int j = 0; j < n; ++j) {
@@ -114,19 +115,21 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
     double **A_prime = new double*[n];
     MaxKPrime max_k_prime = {0.0, -1};
 
+    // Allocate memory for matrices L, U, and A_prime, and pi
+    // Use static, 1 scheduling to distribute the work among threads
+    // Use reduction to find the maximum value of A_prime[k][0] and its index k
     #pragma omp parallel for num_threads(nworkers) schedule(static, 1) reduction(maximum: max_k_prime) shared(n, L, U, A, pi, A_prime, max_k_prime, nworkers) default(none)
     for (int i = 0; i < n; ++i) {
         L[i] = (double *)numa_alloc_local(n * sizeof(double));
         U[i] = (double *)numa_alloc_local(n * sizeof(double));
         A_prime[i] = (double *)numa_alloc_local(n * sizeof(double));
 
+        memset(U[i], 0, n * sizeof(double));
+        memset(L[i], 0, n * sizeof(double));
+        memcpy(A_prime[i], A[i], n * sizeof(double));
+        
+        L[i][i] = 1;
         pi[i] = i;
-
-        for (int j = 0; j < n; ++j) {
-            L[i][j] = (i == j) ? 1 : 0;
-            U[i][j] = 0;
-            A_prime[i][j] = A[i][j];
-        }
 
         double abs_val = abs(A_prime[i][0]);
         if (abs_val > max_k_prime.max) {
@@ -138,31 +141,48 @@ void LU_Decomposition(int nworkers, double** A, int n, int* pi, double** L, doub
     #pragma omp parallel num_threads(nworkers) shared(n, L, U, pi, A_prime, nworkers, max_k_prime) default(none)
     {
         for (int k = 0; k < n; ++k) {
-            #pragma omp single 
-            {   
-                double tmp[k];
+            // The swapping for each metrix is done by different threads
+            #pragma omp sections
+            {
+                #pragma omp section
+                {   
+                    swap(pi[k], pi[max_k_prime.k_prime]);
+                }
 
-                swap(pi[k], pi[max_k_prime.k_prime]);
+                #pragma omp section
+                {   
+                    double tmp[k];
+                    memcpy(tmp, L[k], k * sizeof(double));
+                    memcpy(L[k], L[max_k_prime.k_prime], k * sizeof(double));
+                    memcpy(L[max_k_prime.k_prime], tmp, k * sizeof(double));
+                }
 
-                memcpy(tmp, L[k], k * sizeof(double));
-                memcpy(L[k], L[max_k_prime.k_prime], k * sizeof(double));
-                memcpy(L[max_k_prime.k_prime], tmp, k * sizeof(double));
-                
-                memcpy(U[k] + k, A_prime[max_k_prime.k_prime] + k, (n - k) * sizeof(double));
-                memcpy(A_prime[max_k_prime.k_prime] + k, A_prime[k] + k, (n - k) * sizeof(double));
+                #pragma omp section
+                {   
+                    memcpy(U[k] + k, A_prime[max_k_prime.k_prime] + k, (n - k) * sizeof(double));
+                }
 
-                max_k_prime = {0.0, -1};
+                #pragma omp section
+                {   
+                    // A_prime[k] is not be use in the future, don't need to swap
+                    memcpy(A_prime[max_k_prime.k_prime] + k, A_prime[k] + k, (n - k) * sizeof(double));
+                }
             }
 
+            // implicit barrier
+
+            max_k_prime = {0.0, -1};
+
+            // allign for thread and data's numa node
             int start = (k + 1) - (k + 1) % nworkers;
             
-            // allign for thread and data's numa node
-            #pragma omp for schedule(static, 1) reduction(maximum: max_k_prime)
+            // Use static, 1 to match the row's numa node to the thread
+            #pragma omp for schedule(static, 1) reduction(maximum: max_k_prime) 
             for (int i = start; i < n; ++i) {
                 if (i < k + 1) continue;
-
                 L[i][k] = A_prime[i][k] / U[k][k];
-
+                
+                // Use simd to vectorize the loop
                 #pragma omp simd
                 for (int j = k + 1; j < n; ++j) {
                     A_prime[i][j] -= L[i][k] * U[k][j];
